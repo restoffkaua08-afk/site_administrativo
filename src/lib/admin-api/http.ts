@@ -96,7 +96,12 @@ export function createHttpAdminApi(baseUrl: string, slug: string): AdminApi {
         priceCents: Math.round(Number(service?.price ?? 0) * 100), status: a.status,
       };
     },
-    listClients: async (_search) => unsupported("cadastro e consulta de clientes"),
+    async listClients(search = "") {
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("search", search.trim());
+      const data = await req<{ clients: Client[] }>(`${owner}/clients?${params.toString()}`);
+      return data.clients;
+    },
     upsertClient: async (_client) => unsupported("edição de clientes"),
     listServices,
     upsertService: async (_service) => unsupported("edição de serviços"),
