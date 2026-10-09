@@ -53,7 +53,7 @@ function ConfigPage() {
       {q.isLoading || !s ? (q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : <ListSkeleton rows={3} />) : (
         <form className="grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
           <div className="space-y-1.5"><Label htmlFor="sn">Nome</Label><Input id="sn" value={s.name} onChange={(e) => setS({ ...s, name: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label htmlFor="ss">Slug público</Label><Input id="ss" value={s.slug} onChange={(e) => setS({ ...s, slug: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label htmlFor="ss">Slug público</Label><Input id="ss" value={s.slug} readOnly aria-describedby="slug-help" /><p id="slug-help" className="text-xs text-muted-foreground">Identificador público fixo; a troca exige migração de links e configurações.</p></div>
           <div className="space-y-1.5"><Label htmlFor="sp">Telefone</Label><Input id="sp" value={s.phone} onChange={(e) => setS({ ...s, phone: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="sa">Endereço</Label><Input id="sa" value={s.address} onChange={(e) => setS({ ...s, address: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="sm">Antecedência mínima (h)</Label><Input id="sm" type="number" min={0} value={s.minAdvanceHours} onChange={(e) => setS({ ...s, minAdvanceHours: Number(e.target.value) })} /></div>
