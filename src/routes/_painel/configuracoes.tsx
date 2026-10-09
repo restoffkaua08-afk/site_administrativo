@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -31,7 +32,17 @@ function ConfigPage() {
   return (
     <>
       <PageHeader title="Configurações" actions={<Button disabled={!s || save.isPending} onClick={() => save.mutate()}>Salvar</Button>} />
-      <section className="mb-6 rounded-xl border bg-card p-5" aria-labelledby="integ">
+
+      <section className="mb-6 rounded-xl border bg-card p-5" aria-labelledby="aparencia">
+        <div className="flex items-start gap-3">
+          <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-foreground"><Sun className="size-5" aria-hidden /></div>
+          <div className="min-w-0 flex-1">
+            <h2 id="aparencia" className="font-semibold">Aparência</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Escolha como o painel aparece neste dispositivo. A preferência fica salva localmente.</p>
+            <ThemePicker />
+          </div>
+        </div>
+      </section>\n      <section className="mb-6 rounded-xl border bg-card p-5" aria-labelledby="integ">
         <h2 id="integ" className="font-semibold">Integração</h2>
         <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
           <div><dt className="text-muted-foreground">API pública</dt><dd className="break-all">{config.publicApiUrl} — {health.isLoading ? "verificando…" : health.data ? "online" : "indisponível"}</dd></div>
@@ -52,4 +63,34 @@ function ConfigPage() {
       )}
     </>
   );
+}
+
+function ThemePicker() {
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
+  useEffect(() => {
+    const saved = window.localStorage.getItem("barbearia-admin-theme");
+    const next = saved === "dark" || saved === "system" ? saved : "light";
+    setTheme(next);
+    const apply = () => {
+      const dark = next === "dark" || (next === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", dark);
+    };
+    apply();
+    if (next === "system") {
+      const media = window.matchMedia("(prefers-color-scheme: dark)");
+      media.addEventListener("change", apply);
+      return () => media.removeEventListener("change", apply);
+    }
+  }, []);
+  function choose(next: "light" | "dark" | "system") {
+    setTheme(next);
+    window.localStorage.setItem("barbearia-admin-theme", next);
+    document.documentElement.classList.toggle("dark", next === "dark" || (next === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches));
+  }
+  const options = [
+    { value: "light" as const, label: "Claro", icon: Sun },
+    { value: "dark" as const, label: "Escuro", icon: Moon },
+    { value: "system" as const, label: "Do dispositivo", icon: Monitor },
+  ];
+  return <div className="mt-4 grid gap-2 sm:grid-cols-3" role="group" aria-label="Tema do painel">{options.map(({value,label,icon:Icon}) => <button key={value} type="button" aria-pressed={theme === value} onClick={() => choose(value)} className={`flex items-center gap-2 rounded-lg border px-3 py-3 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${theme === value ? "border-primary bg-accent text-accent-foreground" : "border-border bg-background text-foreground"}`}><Icon className="size-4" aria-hidden />{label}</button>)}</div>;
 }
