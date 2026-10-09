@@ -6,6 +6,7 @@ import { NotIntegratedError } from "./types";
 type ApiService = { id: string; name: string; description?: string; duration_minutes: number; buffer_minutes: number; price: number | string | null; active: boolean };
 type ApiStaff = { id: string; name: string; active: boolean };
 type ApiHours = { id: string; staff_id: string; weekday: number; starts_at: string; ends_at: string; active: boolean };
+type ApiStaffService = { staff_id: string; service_id: string };
 type ApiAppointment = { id: string; service_id: string; staff_id: string; starts_at: string; ends_at: string; customer_name: string; customer_email: string; customer_phone: string; status: "pending" | "confirmed" | "cancelled" | "completed" | "no_show"; created_at: string };
 
 export function createHttpAdminApi(baseUrl: string, slug: string): AdminApi {
@@ -28,7 +29,7 @@ export function createHttpAdminApi(baseUrl: string, slug: string): AdminApi {
   }
   const unsupported = (what: string): never => { throw new NotIntegratedError(what); };
   async function catalog() {
-    return req<{ services: ApiService[]; staff: ApiStaff[]; workingHours: ApiHours[] }>(`${owner}/catalog`);
+    return req<{ services: ApiService[]; staff: ApiStaff[]; staffServices: ApiStaffService[]; workingHours: ApiHours[] }>(`${owner}/catalog`);
   }
   function mapService(s: ApiService): Service {
     return { id: s.id, name: s.name, durationMin: s.duration_minutes, priceCents: Math.round(Number(s.price ?? 0) * 100), bufferMin: s.buffer_minutes, active: s.active };
@@ -38,7 +39,7 @@ export function createHttpAdminApi(baseUrl: string, slug: string): AdminApi {
     const c = await catalog();
     return c.staff.map((p) => ({
       id: p.id, name: p.name, role: "Barbeiro", active: p.active,
-      serviceIds: c.services.filter((s) => c.workingHours.some((h) => h.staff_id === p.id && h.active)).map((s) => s.id),
+      serviceIds: c.staffServices.filter((link) => link.staff_id === p.id).map((link) => link.service_id),
     }));
   }
   return {
@@ -104,11 +105,32 @@ export function createHttpAdminApi(baseUrl: string, slug: string): AdminApi {
     },
     upsertClient: async (_client) => unsupported("edição de clientes"),
     listServices,
-    upsertService: async (_service) => unsupported("edição de serviços"),
-    deleteService: async (_id) => unsupported("exclusão de serviços"),
+    async upsertService(s) {
+      const body = { name: s.name.trim(), durationMinutes: s.durationMin, price: s.priceCents / 100, bufferMinutes: s.bufferMin, active: s.active };
+      const result = await req<{ service: ApiService }>(s.id
+        ? `${owner}/services/${encodeURIComponent(s.id)}`
+        : `${owner}/services`, { method: s.id ? "PATCH" : "POST", body: JSON.stringify(body) });
+      return mapService(result.service);
+    },
+    async deleteService(id) {
+      await req<{ service: ApiService }>(`${owner}/services/${encodeURIComponent(id)}`, {
+        method: "PATCH", body: JSON.stringify({ active: false }),
+      });
+    },
     listProfessionals,
-    upsertProfessional: async (_professional) => unsupported("edição da equipe"),
-    deleteProfessional: async (_id) => unsupported("exclusão de profissionais"),
+    async upsertProfessional(p) {
+      if (p.serviceIds.length) unsupported("vínculo de serviços aos profissionais");
+      const body = { name: p.name.trim(), active: p.active };
+      const result = await req<{ staff: ApiStaff }>(p.id
+        ? `${owner}/staff/${encodeURIComponent(p.id)}`
+        : `${owner}/staff`, { method: p.id ? "PATCH" : "POST", body: JSON.stringify(body) });
+      return { id: result.staff.id, name: result.staff.name, role: p.role || "Barbeiro", active: result.staff.active, serviceIds: [] };
+    },
+    async deleteProfessional(id) {
+      await req<{ staff: ApiStaff }>(`${owner}/staff/${encodeURIComponent(id)}`, {
+        method: "PATCH", body: JSON.stringify({ active: false }),
+      });
+    },
     async getBusinessHours() {
       const { workingHours } = await catalog();
       const grouped = new Map<number, ApiHours[]>();
