@@ -119,12 +119,14 @@ export function createHttpAdminApi(baseUrl: string, slug: string): AdminApi {
     },
     listProfessionals,
     async upsertProfessional(p) {
-      if (p.serviceIds.length) unsupported("vínculo de serviços aos profissionais");
       const body = { name: p.name.trim(), active: p.active };
       const result = await req<{ staff: ApiStaff }>(p.id
         ? `${owner}/staff/${encodeURIComponent(p.id)}`
         : `${owner}/staff`, { method: p.id ? "PATCH" : "POST", body: JSON.stringify(body) });
-      return { id: result.staff.id, name: result.staff.name, role: p.role || "Barbeiro", active: result.staff.active, serviceIds: [] };
+      await req<{ staffId: string; serviceIds: string[] }>(`${owner}/staff/${encodeURIComponent(result.staff.id)}/services`, {
+        method: "PUT", body: JSON.stringify({ serviceIds: p.serviceIds }),
+      });
+      return { id: result.staff.id, name: result.staff.name, role: p.role || "Barbeiro", active: result.staff.active, serviceIds: p.serviceIds };
     },
     async deleteProfessional(id) {
       await req<{ staff: ApiStaff }>(`${owner}/staff/${encodeURIComponent(id)}`, {
