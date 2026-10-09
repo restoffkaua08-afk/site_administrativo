@@ -30,7 +30,7 @@ function Dashboard() {
   const today = todayKey();
   const todayQ = useQuery(appointmentsQuery({ from: today, to: today }));
   const weekQ = useQuery(appointmentsQuery({ from: addDays(today, -6), to: today }));
-  const pendingQ = useQuery(appointmentsQuery({ from: today, status: "pending" }));
+  const pendingQ = useQuery(appointmentsQuery({ from: today, to: today, status: "pending" }));
 
   const list = todayQ.data ?? [];
   const now = new Date().toISOString();
