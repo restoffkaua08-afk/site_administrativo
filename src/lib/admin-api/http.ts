@@ -51,9 +51,19 @@ export function createHttpAdminApi(baseUrl: string, slug: string): AdminApi {
       return { token: result.token, user: { name: result.user.name, email: result.user.email, role: result.user.role === "staff" ? "staff" : "owner" }, demo: false };
     },
     async listAppointments(f = {}) {
-      if (!f.from || !f.to) throw new Error("Informe o intervalo da agenda.");
-      const start = new Date(`${f.from}T00:00:00-03:00`).toISOString();
-      const end = new Date(`${f.to}T00:00:00-03:00`);
+      // Keep the agenda usable even when a caller omits its date filters.
+      // Default to the last 7 days through the next 30 days, using local calendar dates.
+      const dateKey = (value: Date) =>
+        `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+      const today = new Date();
+      const fallbackFrom = new Date(today);
+      fallbackFrom.setDate(fallbackFrom.getDate() - 7);
+      const fallbackTo = new Date(today);
+      fallbackTo.setDate(fallbackTo.getDate() + 30);
+      const from = f.from || dateKey(fallbackFrom);
+      const to = f.to || dateKey(fallbackTo);
+      const start = new Date(`${from}T00:00:00-03:00`).toISOString();
+      const end = new Date(`${to}T00:00:00-03:00`);
       end.setDate(end.getDate() + 1);
       const params = new URLSearchParams({ from: start, to: end.toISOString() });
       if (f.status && f.status !== "all" && f.status !== "declined") params.set("status", f.status);
