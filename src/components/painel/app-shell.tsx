@@ -13,10 +13,11 @@ import {
   Users,
   UserSquare2,
   FlaskConical,
+  ExternalLink,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { isDemo } from "@/lib/admin-api";
+import { config, isDemo } from "@/lib/admin-api";
 import { clearSession, getStoredSession } from "@/lib/session";
 import { initials } from "@/lib/format";
 
@@ -68,6 +69,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </Link>
         ))}
       </nav>
+      <div className="px-3 pb-3">
+        <a href={config.publicSiteUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
+          <ExternalLink className="size-4" aria-hidden />
+          Abrir site oficial
+        </a>
+      </div>
       {isDemo && (
         <div className="mx-3 mb-3 rounded-lg border border-sidebar-border p-3 text-xs text-sidebar-muted">
           <p className="mb-1 flex items-center gap-1.5 font-semibold text-sidebar-primary">
