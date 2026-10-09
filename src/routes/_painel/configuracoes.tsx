@@ -42,7 +42,8 @@ function ConfigPage() {
             <ThemePicker />
           </div>
         </div>
-      </section>\n      <section className="mb-6 rounded-xl border bg-card p-5" aria-labelledby="integ">
+      </section>
+      <section className="mb-6 rounded-xl border bg-card p-5" aria-labelledby="integ">
         <h2 id="integ" className="font-semibold">Integração</h2>
         <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
           <div><dt className="text-muted-foreground">API pública</dt><dd className="break-all">{config.publicApiUrl} — {health.isLoading ? "verificando…" : health.data ? "online" : "indisponível"}</dd></div>
