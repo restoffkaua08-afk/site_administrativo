@@ -142,7 +142,21 @@ export function createHttpAdminApi(baseUrl: string, slug: string): AdminApi {
         return { weekday, open: rows.length > 0, start: rows[0]?.starts_at.slice(0,5) ?? "09:00", end: rows.at(-1)?.ends_at.slice(0,5) ?? "18:00" };
       });
     },
-    saveBusinessHours: async (_days) => unsupported("edição de horários de funcionamento"),
+    async saveBusinessHours(days) {
+      const normalized = Array.from({ length: 7 }, (_, weekday) => {
+        const day = days.find((entry) => entry.weekday === weekday);
+        return {
+          weekday,
+          open: Boolean(day?.open),
+          start: day?.start ?? "09:00",
+          end: day?.end ?? "18:00",
+        };
+      });
+      await req<{ result: unknown }>(`${owner}/working-hours`, {
+        method: "PUT", body: JSON.stringify({ days: normalized }),
+      });
+      return days;
+    },
     getSettings: async () => unsupported("configurações da barbearia"),
     saveSettings: async (_settings) => unsupported("edição das configurações da barbearia"),
   };
