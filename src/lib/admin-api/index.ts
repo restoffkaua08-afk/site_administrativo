@@ -1,17 +1,17 @@
 import { demoApi } from "./demo";
-import { createHttpAdminApi } from "./http";
 import type { AdminApi } from "./types";
 
 export * from "./types";
 
 export const config = {
-  adminApiUrl: (import.meta.env.VITE_ADMIN_API_URL as string | undefined) || "",
+  // This branch is intentionally demo-only: do not connect to the real admin API.
+  adminApiUrl: "",
   publicApiUrl:
     (import.meta.env.VITE_PUBLIC_API_URL as string | undefined) || "https://sistema-agendamento-api-lemon.vercel.app",
   shopSlug: (import.meta.env.VITE_SHOP_SLUG as string | undefined) || "barbearia-nilles",
   publicSiteUrl: (import.meta.env.VITE_PUBLIC_SITE_URL as string | undefined) || "https://site-barbearia-ashy-eta.vercel.app/agendamento",
 };
 
-/** Sem VITE_ADMIN_API_URL o painel roda em modo demonstração (dados em memória). */
-export const api: AdminApi = config.adminApiUrl ? createHttpAdminApi(config.adminApiUrl, config.shopSlug) : demoApi;
-export const isDemo = api.mode === "demo";
+/** Temporary no-login demo: all panel data is fictional and in-memory only. */
+export const api: AdminApi = demoApi;
+export const isDemo = true;
