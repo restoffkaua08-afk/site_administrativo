@@ -157,8 +157,8 @@ export function createHttpAdminApi(baseUrl: string, slug: string): AdminApi {
       });
       return days;
     },
-    getSettings: async () => unsupported("configurações da barbearia"),
-    saveSettings: async (_settings) => unsupported("edição das configurações da barbearia"),
+    async getSettings() { return (await req<{ settings: ShopSettings }>(owner + "/settings")).settings; },
+    async saveSettings(settings) { return (await req<{ settings: ShopSettings }>(owner + "/settings", { method: "PATCH", body: JSON.stringify(settings) })).settings; },
   };
 }
 
